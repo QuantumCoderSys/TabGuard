@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #ffffff;
+  --bg: #f8f9fa;
   --card: #ffffff;
-  --ink: #262730;
-  --muted: #7a7580;
-  --accent: #e6e49f;
-  --accent-dark: #4f4b25;
-  --border: #ece6cf;
-  --shadow: 0 14px 28px rgba(38, 39, 48, 0.08);
-  --soft: #fffdf6;
+  --ink: #3a3a3c;
+  --muted: rgba(58, 58, 60, 0.7);
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --border: rgba(58, 58, 60, 0.15);
+  --shadow: 0 14px 28px rgba(58, 58, 60, 0.08);
+  --soft: #f8f9fa;
 }
 
 * {
@@ -129,14 +129,14 @@ button {
   font-weight: 600;
   cursor: pointer;
   background: var(--accent);
-  color: #1d1e27;
+  color: #ffffff;
   transition: transform 0.15s ease, background 0.15s ease;
   box-shadow: none;
 }
 
 button:hover {
   transform: translateY(-1px);
-  background: #efeec1;
+  background: #818cf8;
 }
 
 button.ghost {
@@ -196,7 +196,7 @@ input:disabled {
 }
 
 code {
-  background: #f3ecd7;
+  background: rgba(58, 58, 60, 0.08);
   padding: 2px 6px;
   border-radius: 6px;
   font-family: "Courier New", monospace;

@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --bg-accent: #ffffff;
+  --bg: #f8f9fa;
+  --bg-accent: #f8f9fa;
   --card: #ffffff;
-  --ink: #262730;
-  --muted: #6b6758;
-  --accent: #e6e49f;
-  --accent-dark: #4f4b25;
-  --border: #e5dec8;
-  --shadow: 0 18px 40px rgba(38, 39, 48, 0.12);
+  --ink: #3a3a3c;
+  --muted: rgba(58, 58, 60, 0.7);
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --border: rgba(58, 58, 60, 0.15);
+  --shadow: 0 18px 40px rgba(58, 58, 60, 0.12);
 }
 
 * {
@@ -20,7 +20,7 @@ body {
   min-height: 100vh;
   font-family: "Trebuchet MS", "Gill Sans", "Verdana", sans-serif;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--bg);
 }
 
 .shell {
@@ -86,7 +86,7 @@ textarea {
   padding: 10px 12px;
   font-size: 15px;
   font-family: inherit;
-  background: #fffdf6;
+  background: #ffffff;
   color: var(--ink);
   outline: none;
   box-shadow: none;
@@ -120,7 +120,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   background: var(--accent);
-  color: #1d1e27;
+  color: #ffffff;
   transition: transform 0.15s ease;
   box-shadow: none;
 }
@@ -154,7 +154,7 @@ textarea:disabled {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #fffdf6;
+  background: #ffffff;
 }
 
 .site-name {
@@ -178,7 +178,7 @@ textarea:disabled {
 .slider {
   position: absolute;
   inset: 0;
-  background: #d9d2b8;
+  background: rgba(58, 58, 60, 0.25);
   border-radius: 999px;
   transition: background 0.2s ease;
 }
@@ -201,7 +201,7 @@ textarea:disabled {
 
 .switch input:checked + .slider::before {
   transform: translateX(18px);
-  background: #262730;
+  background: #3a3a3c;
 }
 
 .add-site {
@@ -255,7 +255,7 @@ button.ghost {
 }
 
 code {
-  background: #f3ecd7;
+  background: rgba(58, 58, 60, 0.08);
   padding: 2px 6px;
   border-radius: 6px;
   font-family: "Courier New", monospace;
@@ -265,7 +265,7 @@ code {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(12, 12, 18, 0.7);
+  background: rgba(58, 58, 60, 0.35);
   display: grid;
   place-items: center;
   z-index: 9999;

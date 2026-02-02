@@ -493,7 +493,7 @@
     overlay.style.justifyContent = "center";
     overlay.style.pointerEvents = "auto";
     overlay.style.touchAction = "none";
-    overlay.style.background = "#ffffff";
+    overlay.style.background = "#f8f9fa";
     overlay.style.isolation = "isolate";
   }
 
@@ -686,20 +686,20 @@
       }
       .panel {
         width: min(420px, 90vw);
-        background: #2b2c3a;
+        background: #ffffff;
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-        border: 1px solid #3c3e4d;
+        box-shadow: 0 24px 60px rgba(58, 58, 60, 0.18);
+        border: 1px solid rgba(58, 58, 60, 0.15);
       }
       .title {
         font-size: 22px;
         font-weight: 700;
-        color: #f7f5dc;
+        color: #3a3a3c;
         margin-bottom: 8px;
       }
       .subtitle {
-        color: #cfcba6;
+        color: rgba(58, 58, 60, 0.7);
         font-size: 14px;
         margin-bottom: 18px;
       }
@@ -718,7 +718,7 @@
       }
       .duration-label {
         font-size: 13px;
-        color: #cfcba6;
+        color: rgba(58, 58, 60, 0.7);
       }
       .duration-grid {
         display: grid;
@@ -728,17 +728,17 @@
       input {
         padding: 10px 12px;
         border-radius: 10px;
-        border: 1px solid #3c3e4d;
+        border: 1px solid rgba(58, 58, 60, 0.2);
         font-size: 15px;
-        background: #1f2029;
-        color: #f7f5dc;
+        background: #f8f9fa;
+        color: #3a3a3c;
         outline: none;
         box-shadow: none;
       }
       input:focus {
         outline: none;
         box-shadow: none;
-        border-color: #e6e49f;
+        border-color: #6366f1;
       }
       button {
         border: none;
@@ -754,19 +754,19 @@
         cursor: not-allowed;
       }
       .unlock {
-        background: #e6e49f;
-        color: #1d1e27;
+        background: #6366f1;
+        color: #ffffff;
       }
       .link {
         background: transparent;
-        color: #e6e49f;
+        color: #6366f1;
         padding: 6px 0;
         text-align: left;
       }
       .error {
         min-height: 18px;
         font-size: 13px;
-        color: #fca5a5;
+        color: #b91c1c;
         margin-top: 6px;
       }
     `;
@@ -786,7 +786,13 @@
     const input = document.createElement("input");
     input.type = "password";
     input.placeholder = "Password";
-    input.autocomplete = "off";
+    input.name = "tabguard-unlock";
+    input.autocomplete = "new-password";
+    input.setAttribute("autocomplete", "new-password");
+    input.setAttribute("spellcheck", "false");
+    input.setAttribute("autocapitalize", "off");
+    input.setAttribute("autocorrect", "off");
+    input.setAttribute("data-form-type", "other");
     input.setAttribute("data-lpignore", "true");
     input.setAttribute("data-1p-ignore", "true");
     input.setAttribute("data-bwignore", "true");
