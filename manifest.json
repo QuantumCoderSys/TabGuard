@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "PassWordLock",
+  "name": "TabGuard",
   "version": "0.1.0",
   "description": "Lock specified sites behind a password.",
   "permissions": ["storage", "tabs", "webNavigation", "scripting"],
@@ -10,7 +10,7 @@
   },
   "options_page": "options/options.html",
   "action": {
-    "default_title": "PassWordLock",
+    "default_title": "TabGuard",
     "default_popup": "popup/popup.html"
   },
   "content_scripts": [

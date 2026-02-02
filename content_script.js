@@ -188,7 +188,7 @@
 
   init().catch((error) => {
     if (!isContextInvalidated(error)) {
-      console.error("PassWordLock error:", error);
+      console.error("TabGuard error:", error);
     }
     removeHide();
   });
@@ -212,7 +212,7 @@
         await applyLockState(data);
       } catch (error) {
         if (!isContextInvalidated(error)) {
-          console.error("PassWordLock error:", error);
+          console.error("TabGuard error:", error);
         }
       }
     });
@@ -229,7 +229,7 @@
           .then((data) => applyLockState(data))
           .catch((error) => {
             if (!isContextInvalidated(error)) {
-              console.error("PassWordLock error:", error);
+              console.error("TabGuard error:", error);
             }
           });
         return;
@@ -258,7 +258,7 @@
           })
           .catch((error) => {
             if (!isContextInvalidated(error)) {
-              console.error("PassWordLock error:", error);
+              console.error("TabGuard error:", error);
             }
           });
       }

@@ -1,4 +1,4 @@
-# PassWordLock
+# TabGuard
 
 A Chrome extension that locks specified websites behind a password. When a locked site loads, an overlay blocks access until the correct password is entered.
 
@@ -16,7 +16,7 @@ A Chrome extension that locks specified websites behind a password. When a locke
 1. Open Chrome and go to `chrome://extensions`.
 2. Enable **Developer mode** (top right).
 3. Click **Load unpacked** and choose this folder:
-   `/Users/sarthakrawool/Documents/Programming/PassWordLock`
+   `/Users/sarthakrawool/Documents/Programming/TabGuard`
 4. Click the extension's **Details** and open **Extension options** to set a password and site list.
 
 ## Quick usage
