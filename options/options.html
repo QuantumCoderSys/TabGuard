@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PassWordLock Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div id="unlock-overlay" class="overlay hidden">
+      <div class="overlay-card">
+        <div id="unlock-title" class="overlay-title">Password required</div>
+        <p id="unlock-subtitle" class="overlay-subtitle">
+          Enter your password to continue.
+        </p>
+        <input id="unlock-password" type="password" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+        <div class="actions">
+          <button id="unlock-settings" type="button">Confirm</button>
+          <button id="cancel-unlock" class="ghost" type="button">Cancel</button>
+        </div>
+        <p id="unlock-status" class="status error" aria-live="polite"></p>
+      </div>
+    </div>
+    <main class="shell">
+      <header class="hero">
+        <div class="logo">PassWordLock</div>
+        <p class="subtitle">Lock specific sites behind a password.</p>
+      </header>
+
+      <section id="first-run-card" class="card hidden">
+        <h2>Welcome</h2>
+        <p class="muted">
+          Set a password, then add sites you want to lock. You can manage locks from the popup
+          or here in settings.
+        </p>
+        <div class="actions">
+          <button id="dismiss-first-run" type="button">Got it</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>What this extension does</h2>
+        <p class="muted">
+          PassWordLock blocks chosen sites with a password prompt, supports temporary/session
+          unlocks, and re-locks on navigation. It stores only password hashes locally.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Password</h2>
+        <p id="password-state" class="muted">Loading password status...</p>
+        <div class="field-grid">
+          <label for="current-password">Current password</label>
+          <input id="current-password" type="password" autocomplete="off" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <label for="password">New password</label>
+          <input id="password" type="password" autocomplete="off" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <label for="confirm-password">Confirm password</label>
+          <input id="confirm-password" type="password" autocomplete="off" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+        </div>
+        <label class="toggle">
+          <input id="toggle-password" type="checkbox" data-settings-control />
+          <span>Show password</span>
+        </label>
+        <div class="actions">
+          <button id="save-password" type="button" data-settings-control>Save password</button>
+          <button id="clear-password" class="ghost" type="button" data-settings-control>Clear password</button>
+        </div>
+        <p id="password-status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <h2>Locked sites</h2>
+        <p class="muted">
+          Toggle locks on or off. Use <code>example.com</code> for exact host or
+          <code>*.example.com</code> for subdomains.
+        </p>
+        <div id="site-list" class="site-list"></div>
+        <p id="sites-empty" class="muted">No sites added yet.</p>
+        <div class="actions">
+          <button id="show-add-site" type="button" data-settings-control>Add new site</button>
+        </div>
+        <form id="add-site-form" class="add-site hidden">
+          <label for="new-site">New site</label>
+          <input id="new-site" type="text" spellcheck="false" data-settings-control />
+          <div class="actions">
+            <button id="add-site" type="submit" data-settings-control>Add</button>
+            <button id="cancel-add-site" class="ghost" type="button" data-settings-control>Cancel</button>
+          </div>
+        </form>
+        <p id="sites-status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <h2>Emergency reset</h2>
+        <p class="muted">
+          If you forget your password, you can reset it locally. This clears the password and
+          disables all site locks on this browser only.
+        </p>
+        <div class="actions">
+          <button id="reset-all" class="ghost danger" type="button">Reset & unlock</button>
+        </div>
+        <p id="reset-status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card note">
+        <h2>Notes</h2>
+        <ul>
+          <li>Only http/https pages can be locked.</li>
+          <li>Changing the password requires re-entering it on locked sites.</li>
+          <li>Quick lock shortcut: <strong>Command + Shift + L</strong> (Mac) or <strong>Ctrl + Shift + L</strong> (Windows/Linux).</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="../shared.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

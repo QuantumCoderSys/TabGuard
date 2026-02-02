@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PassWordLock</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header>
+        <div class="title">PassWordLock</div>
+        <p class="subtitle">Lock the current site quickly.</p>
+      </header>
+
+      <section class="card">
+        <div class="row">
+          <span class="label">Current tab</span>
+          <span id="current-host" class="value">Loading...</span>
+        </div>
+        <p id="lock-status" class="status">Checking lock status...</p>
+        <p id="unlock-until" class="status muted"></p>
+        <div class="actions inline">
+          <button id="lock-now" type="button">Lock now</button>
+        </div>
+        <p id="instant-status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <label for="site-entry" class="label">Site to lock</label>
+        <input id="site-entry" type="text" spellcheck="false" />
+        <p class="hint">Use <code>*.example.com</code> to lock subdomains.</p>
+        <div class="actions">
+          <button id="add-site" type="button">Add to locked list</button>
+          <button id="remove-site" class="ghost" type="button">Remove from locked list</button>
+        </div>
+        <p id="popup-status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <div class="label">Matching locks</div>
+        <ul id="match-list" class="match-list"></ul>
+      </section>
+
+      <button id="open-settings" class="ghost full" type="button">Open settings</button>
+    </main>
+
+    <script src="../shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
