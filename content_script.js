@@ -6,6 +6,7 @@
   const guardToken = `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
   const overlayMarker = `data-pwl-${guardToken}`;
   const styleMarker = `data-pwl-style-${guardToken}`;
+  const INSTANCE_KEY = "__tabguard_content_instance__";
 
   if (!location || !location.protocol || !location.hostname) {
     return;
@@ -18,6 +19,18 @@
   if (typeof document === "undefined") {
     return;
   }
+
+  // Ensure only one content-script instance is active per page.
+  const existingInstance = globalThis[INSTANCE_KEY];
+  if (existingInstance && typeof existingInstance.cleanup === "function") {
+    try {
+      existingInstance.cleanup();
+    } catch (error) {
+      console.error("TabGuard cleanup error:", error);
+    }
+  }
+  const instanceControl = { cleanup: () => {} };
+  globalThis[INSTANCE_KEY] = instanceControl;
 
   // Silence benign promise rejections when the extension reloads and the context is torn down.
   window.addEventListener("unhandledrejection", (event) => {
@@ -179,6 +192,9 @@
   let guardScheduled = false;
   let lockActive = false;
   let focusRedirectPending = false;
+  let storageChangeListener = null;
+  let runtimeMessageListener = null;
+  let tornDown = false;
   let currentConfig = {
     host: pageHost,
     passwordHash: null,
@@ -194,7 +210,10 @@
   });
 
   if (chrome.storage?.onChanged) {
-    chrome.storage.onChanged.addListener(async (changes, areaName) => {
+    storageChangeListener = async (changes, areaName) => {
+      if (tornDown) {
+        return;
+      }
       if (!isContextValid()) {
         return;
       }
@@ -215,11 +234,15 @@
           console.error("TabGuard error:", error);
         }
       }
-    });
+    };
+    chrome.storage.onChanged.addListener(storageChangeListener);
   }
 
   if (chrome.runtime?.onMessage) {
-    chrome.runtime.onMessage.addListener((message) => {
+    runtimeMessageListener = (message) => {
+      if (tornDown) {
+        return;
+      }
       if (!message || !message.type) {
         return;
       }
@@ -262,8 +285,46 @@
             }
           });
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(runtimeMessageListener);
   }
+
+  function cleanupInstance() {
+    if (tornDown) {
+      return;
+    }
+    tornDown = true;
+    lockActive = false;
+    focusRedirectPending = false;
+
+    if (cooldownTimer) {
+      clearInterval(cooldownTimer);
+      cooldownTimer = null;
+    }
+    if (relockTimer) {
+      clearTimeout(relockTimer);
+      relockTimer = null;
+    }
+    if (guardObserver) {
+      guardObserver.disconnect();
+      guardObserver = null;
+    }
+
+    if (storageChangeListener && chrome.storage?.onChanged?.removeListener) {
+      chrome.storage.onChanged.removeListener(storageChangeListener);
+      storageChangeListener = null;
+    }
+    if (runtimeMessageListener && chrome.runtime?.onMessage?.removeListener) {
+      chrome.runtime.onMessage.removeListener(runtimeMessageListener);
+      runtimeMessageListener = null;
+    }
+
+    removeOverlay();
+    removeHide();
+    unlockPageInteraction();
+  }
+
+  instanceControl.cleanup = cleanupInstance;
 
   async function init() {
     const data = await safeGet(WATCH_KEYS);
@@ -401,7 +462,7 @@
     unlockPageInteraction();
   }
 
-  // Prevent interaction with the page by disabling pointer events and trapping focus.
+  // Keep focus and scrolling on the lock UI while the page is blocked by the overlay.
   function lockPageInteraction() {
     if (!document.documentElement) {
       return;
@@ -423,17 +484,10 @@
     if (body) {
       if (!pageLockState.bodySnapshot) {
         pageLockState.bodySnapshot = {
-          overflow: body.style.overflow,
-          pointerEvents: body.style.pointerEvents,
-          userSelect: body.style.userSelect
+          overflow: body.style.overflow
         };
       }
       body.style.overflow = "hidden";
-      body.style.pointerEvents = "none";
-      body.style.userSelect = "none";
-      if ("inert" in body) {
-        body.inert = true;
-      }
     }
   }
 
@@ -447,11 +501,6 @@
 
     if (body && pageLockState.bodySnapshot) {
       body.style.overflow = pageLockState.bodySnapshot.overflow || "";
-      body.style.pointerEvents = pageLockState.bodySnapshot.pointerEvents || "";
-      body.style.userSelect = pageLockState.bodySnapshot.userSelect || "";
-      if ("inert" in body) {
-        body.inert = false;
-      }
     }
 
     pageLockState = null;
@@ -725,7 +774,30 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
       }
-      input {
+      .custom-duration {
+        display: grid;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid rgba(58, 58, 60, 0.18);
+        border-radius: 12px;
+        background: #f8f9fa;
+      }
+      .custom-duration-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: rgba(58, 58, 60, 0.75);
+      }
+      .custom-slider {
+        width: 100%;
+        accent-color: #6366f1;
+      }
+      .custom-apply {
+        background: #6366f1;
+        color: #ffffff;
+      }
+      input:not([type="range"]) {
         padding: 10px 12px;
         border-radius: 10px;
         border: 1px solid rgba(58, 58, 60, 0.2);
@@ -735,7 +807,7 @@
         outline: none;
         box-shadow: none;
       }
-      input:focus {
+      input:not([type="range"]):focus {
         outline: none;
         box-shadow: none;
         border-color: #6366f1;
@@ -810,6 +882,43 @@
 
     const durationGrid = document.createElement("div");
     durationGrid.className = "duration-grid";
+    const customDuration = document.createElement("div");
+    customDuration.className = "custom-duration";
+    const customDurationHeader = document.createElement("div");
+    customDurationHeader.className = "custom-duration-header";
+    const customDurationLabel = document.createElement("span");
+    customDurationLabel.textContent = "Custom";
+    const customDurationValue = document.createElement("span");
+    const customDurationSlider = document.createElement("input");
+    customDurationSlider.type = "range";
+    customDurationSlider.className = "custom-slider";
+    customDurationSlider.min = "1";
+    customDurationSlider.max = "240";
+    customDurationSlider.step = "1";
+    customDurationSlider.value = "30";
+    const customDurationButton = document.createElement("button");
+    customDurationButton.type = "button";
+    customDurationButton.className = "custom-apply";
+    customDurationButton.textContent = "Unlock custom";
+
+    function formatDurationMinutes(minutes) {
+      const value = Number(minutes);
+      if (!Number.isFinite(value) || value <= 0) {
+        return "1 min";
+      }
+      if (value % 60 === 0) {
+        const hours = value / 60;
+        return `${hours} hour${hours === 1 ? "" : "s"}`;
+      }
+      return `${value} min`;
+    }
+
+    customDurationValue.textContent = formatDurationMinutes(customDurationSlider.value);
+    customDurationSlider.addEventListener("input", () => {
+      customDurationValue.textContent = formatDurationMinutes(customDurationSlider.value);
+    });
+    customDurationHeader.append(customDurationLabel, customDurationValue);
+    customDuration.append(customDurationHeader, customDurationSlider, customDurationButton);
 
     const durations = [
       { type: "session", label: "This session" },
@@ -819,6 +928,14 @@
     ];
 
     const focusables = [];
+
+    async function unlockForDuration(durationMs) {
+      const expiresAt = await setTempUnlock(hostKey, durationMs);
+      lockActive = false;
+      removeOverlay();
+      removeHide();
+      scheduleRelock(expiresAt);
+    }
 
     durations.forEach(({ minutes, label, type }) => {
       const button = document.createElement("button");
@@ -832,17 +949,20 @@
           removeHide();
           return;
         }
-        const expiresAt = await setTempUnlock(hostKey, minutes * 60 * 1000);
-        lockActive = false;
-        removeOverlay();
-        removeHide();
-        scheduleRelock(expiresAt);
+        await unlockForDuration(minutes * 60 * 1000);
       });
       focusables.push(button);
       durationGrid.appendChild(button);
     });
 
-    duration.append(durationLabel, durationGrid);
+    customDurationButton.addEventListener("click", async () => {
+      const minutes = Number(customDurationSlider.value) || 1;
+      await unlockForDuration(minutes * 60 * 1000);
+    });
+    focusables.push(customDurationSlider);
+    focusables.push(customDurationButton);
+
+    duration.append(durationLabel, durationGrid, customDuration);
 
     const error = document.createElement("div");
     error.className = "error";

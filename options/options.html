@@ -7,13 +7,36 @@
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
+    <div id="setup-overlay" class="overlay hidden">
+      <div class="overlay-card">
+        <div class="overlay-title">Set your password</div>
+        <p class="overlay-subtitle">
+          Create a password to start using TabGuard.
+        </p>
+        <div class="password-field overlay-password-field">
+          <input id="setup-password" type="password" autocomplete="new-password" placeholder="New password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <button class="icon-toggle pw-toggle" type="button" data-target="setup-password" aria-label="Show password"></button>
+        </div>
+        <div class="password-field overlay-password-field">
+          <input id="setup-confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <button class="icon-toggle pw-toggle" type="button" data-target="setup-confirm-password" aria-label="Show password"></button>
+        </div>
+        <div class="actions">
+          <button id="save-setup-password" type="button">Save password</button>
+        </div>
+        <p id="setup-password-status" class="status" aria-live="polite"></p>
+      </div>
+    </div>
     <div id="unlock-overlay" class="overlay hidden">
       <div class="overlay-card">
         <div id="unlock-title" class="overlay-title">Password required</div>
         <p id="unlock-subtitle" class="overlay-subtitle">
           Enter your password to continue.
         </p>
-        <input id="unlock-password" type="password" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+        <div class="password-field overlay-password-field">
+          <input id="unlock-password" type="password" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <button class="icon-toggle pw-toggle" type="button" data-target="unlock-password" aria-label="Show password"></button>
+        </div>
         <div class="actions">
           <button id="unlock-settings" type="button">Confirm</button>
           <button id="cancel-unlock" class="ghost" type="button">Cancel</button>
@@ -51,16 +74,21 @@
         <p id="password-state" class="muted">Loading password status...</p>
         <div class="field-grid">
           <label for="current-password">Current password</label>
-          <input id="current-password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <div class="password-field">
+            <input id="current-password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+            <button class="icon-toggle pw-toggle" type="button" data-target="current-password" data-settings-control aria-label="Show password"></button>
+          </div>
           <label for="password">New password</label>
-          <input id="password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <div class="password-field">
+            <input id="password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+            <button class="icon-toggle pw-toggle" type="button" data-target="password" data-settings-control aria-label="Show password"></button>
+          </div>
           <label for="confirm-password">Confirm password</label>
-          <input id="confirm-password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+          <div class="password-field">
+            <input id="confirm-password" type="password" autocomplete="new-password" data-settings-control data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+            <button class="icon-toggle pw-toggle" type="button" data-target="confirm-password" data-settings-control aria-label="Show password"></button>
+          </div>
         </div>
-        <label class="toggle">
-          <input id="toggle-password" type="checkbox" data-settings-control />
-          <span>Show password</span>
-        </label>
         <div class="actions">
           <button id="save-password" type="button" data-settings-control>Save password</button>
           <button id="clear-password" class="ghost" type="button" data-settings-control>Clear password</button>

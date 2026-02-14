@@ -18,26 +18,9 @@ function notifyTab(tabId, message = LOCK_CHECK_MESSAGE) {
   if (!tabId && tabId !== 0) {
     return;
   }
-  // Ignore errors when no content script is present; try injecting if missing.
+  // Content scripts are declared in the manifest; don't inject again to avoid duplicates.
   chrome.tabs.sendMessage(tabId, message, () => {
-    if (!chrome.runtime.lastError) {
-      return;
-    }
-    if (!chrome.scripting) {
-      return;
-    }
-    chrome.scripting.executeScript(
-      {
-        target: { tabId },
-        files: ["content_script.js"]
-      },
-      () => {
-        void chrome.runtime.lastError;
-        chrome.tabs.sendMessage(tabId, message, () => {
-          void chrome.runtime.lastError;
-        });
-      }
-    );
+    void chrome.runtime.lastError;
   });
 }
 

@@ -3,7 +3,6 @@ const elements = {
   currentPassword: document.getElementById("current-password"),
   passwordInput: document.getElementById("password"),
   confirmInput: document.getElementById("confirm-password"),
-  togglePassword: document.getElementById("toggle-password"),
   savePasswordBtn: document.getElementById("save-password"),
   clearPasswordBtn: document.getElementById("clear-password"),
   passwordStatus: document.getElementById("password-status"),
@@ -19,6 +18,11 @@ const elements = {
   dismissFirstRun: document.getElementById("dismiss-first-run"),
   resetAllBtn: document.getElementById("reset-all"),
   resetStatus: document.getElementById("reset-status"),
+  setupOverlay: document.getElementById("setup-overlay"),
+  setupPassword: document.getElementById("setup-password"),
+  setupConfirmPassword: document.getElementById("setup-confirm-password"),
+  setupSaveButton: document.getElementById("save-setup-password"),
+  setupPasswordStatus: document.getElementById("setup-password-status"),
   unlockOverlay: document.getElementById("unlock-overlay"),
   unlockTitle: document.getElementById("unlock-title"),
   unlockSubtitle: document.getElementById("unlock-subtitle"),
@@ -46,10 +50,60 @@ const COOLDOWN_MS = 15000;
 let failedAttempts = 0;
 let cooldownUntil = 0;
 let cooldownTimer = null;
+let setupPasswordRequired = false;
+
+const EYE_ICON = `
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M12 5c4.95 0 9.16 3.11 10.8 7.5C21.16 16.89 16.95 20 12 20S2.84 16.89 1.2 12.5C2.84 8.11 7.05 5 12 5Zm0 2C8.31 7 5.07 9.2 3.39 12.5 5.07 15.8 8.31 18 12 18s6.93-2.2 8.61-5.5C18.93 9.2 15.69 7 12 7Zm0 2.5A3.5 3.5 0 1 1 8.5 13 3.5 3.5 0 0 1 12 9.5Zm0 2A1.5 1.5 0 1 0 13.5 13 1.5 1.5 0 0 0 12 11.5Z"/>
+  </svg>
+`;
+
+const EYE_OFF_ICON = `
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="m3.28 2 18.72 18.72-1.41 1.41-3.02-3.02A11.73 11.73 0 0 1 12 20c-4.95 0-9.16-3.11-10.8-7.5a12.03 12.03 0 0 1 4.28-5.57L1.86 3.41 3.28 2Zm3.62 6.44A9.87 9.87 0 0 0 3.39 12.5C5.07 15.8 8.31 18 12 18c1.38 0 2.68-.31 3.84-.86l-2.21-2.21A3.5 3.5 0 0 1 9.07 10.37L6.9 8.44ZM12 5c4.95 0 9.16 3.11 10.8 7.5a12.04 12.04 0 0 1-3.77 5.23l-1.44-1.44a10.05 10.05 0 0 0 3.02-3.79C18.93 9.2 15.69 7 12 7c-.86 0-1.7.12-2.48.34L7.91 5.72A11.95 11.95 0 0 1 12 5Z"/>
+  </svg>
+`;
 
 function setStatus(element, message, isError = false) {
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function setPasswordToggleIcon(button, visible) {
+  button.innerHTML = visible ? EYE_OFF_ICON : EYE_ICON;
+  button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+}
+
+function wirePasswordVisibilityToggles() {
+  document.querySelectorAll(".pw-toggle").forEach((button) => {
+    const targetId = button.getAttribute("data-target");
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (!target) {
+      return;
+    }
+    setPasswordToggleIcon(button, target.type === "text");
+    button.addEventListener("click", () => {
+      const showing = target.type === "text";
+      target.type = showing ? "password" : "text";
+      setPasswordToggleIcon(button, !showing);
+      target.focus();
+    });
+  });
+}
+
+function closeSetupOverlay() {
+  elements.setupOverlay.classList.add("hidden");
+  elements.setupPassword.value = "";
+  elements.setupConfirmPassword.value = "";
+  setStatus(elements.setupPasswordStatus, "", false);
+}
+
+function openSetupOverlay() {
+  elements.setupOverlay.classList.remove("hidden");
+  elements.setupPassword.value = "";
+  elements.setupConfirmPassword.value = "";
+  setStatus(elements.setupPasswordStatus, "", false);
+  elements.setupPassword.focus();
 }
 
 function showAddForm(show) {
@@ -177,6 +231,13 @@ async function loadSettings() {
     passwordIterations: data.passwordIterations || PWL.DEFAULT_ITERATIONS
   });
 
+  setupPasswordRequired = Boolean(data.firstRun && !(data.passwordHash && data.passwordSalt));
+  if (setupPasswordRequired) {
+    openSetupOverlay();
+  } else {
+    closeSetupOverlay();
+  }
+
   elements.firstRunCard.classList.toggle("hidden", !data.firstRun);
 }
 
@@ -223,7 +284,8 @@ async function handleSavePassword() {
   await chrome.storage.local.set({
     passwordHash: hash,
     passwordSalt: salt,
-    passwordIterations: PWL.DEFAULT_ITERATIONS
+    passwordIterations: PWL.DEFAULT_ITERATIONS,
+    firstRun: false
   });
 
   lockConfig = {
@@ -237,7 +299,48 @@ async function handleSavePassword() {
   elements.confirmInput.value = "";
   elements.passwordState.textContent = "Password is set.";
   elements.currentPassword.placeholder = "Required to change password";
+  elements.firstRunCard.classList.add("hidden");
   setStatus(elements.passwordStatus, "Password saved.", false);
+}
+
+async function handleSetupPassword() {
+  setStatus(elements.setupPasswordStatus, "", false);
+
+  const password = elements.setupPassword.value.trim();
+  const confirm = elements.setupConfirmPassword.value.trim();
+
+  if (password.length < 6) {
+    setStatus(elements.setupPasswordStatus, "Use at least 6 characters.", true);
+    return;
+  }
+
+  if (password !== confirm) {
+    setStatus(elements.setupPasswordStatus, "Passwords do not match.", true);
+    return;
+  }
+
+  const salt = PWL.generateSaltBase64(16);
+  const hash = await PWL.derivePasswordHash(password, salt, PWL.DEFAULT_ITERATIONS);
+
+  await chrome.storage.local.set({
+    passwordHash: hash,
+    passwordSalt: salt,
+    passwordIterations: PWL.DEFAULT_ITERATIONS,
+    firstRun: false
+  });
+
+  setLockState({
+    passwordHash: hash,
+    passwordSalt: salt,
+    passwordIterations: PWL.DEFAULT_ITERATIONS
+  });
+
+  setupPasswordRequired = false;
+  elements.passwordState.textContent = "Password is set.";
+  elements.currentPassword.placeholder = "Required to change password";
+  elements.firstRunCard.classList.add("hidden");
+  setStatus(elements.passwordStatus, "Password saved.", false);
+  closeSetupOverlay();
 }
 
 async function handleClearPassword() {
@@ -459,14 +562,19 @@ async function removeSite(host) {
 
 function wireEvents() {
   elements.savePasswordBtn.addEventListener("click", handleSavePassword);
+  elements.setupSaveButton.addEventListener("click", handleSetupPassword);
   elements.clearPasswordBtn.addEventListener("click", handleClearPassword);
-  elements.togglePassword.addEventListener("change", () => {
-    const type = elements.togglePassword.checked ? "text" : "password";
-    elements.currentPassword.type = type;
-    elements.passwordInput.type = type;
-    elements.confirmInput.type = type;
-  });
   elements.unlockButton.addEventListener("click", handleUnlock);
+  elements.setupConfirmPassword.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleSetupPassword();
+    }
+  });
+  elements.setupPassword.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleSetupPassword();
+    }
+  });
   elements.unlockPassword.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       handleUnlock();
@@ -487,5 +595,6 @@ function wireEvents() {
   elements.resetAllBtn.addEventListener("click", handleResetAll);
 }
 
+wirePasswordVisibilityToggles();
 wireEvents();
 loadSettings();

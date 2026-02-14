@@ -28,6 +28,18 @@ function setInstantStatus(message, isError = false) {
   elements.instantStatus.classList.toggle("error", isError);
 }
 
+function truncateLabel(value, maxLength = 22) {
+  if (!value || value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, Math.max(0, maxLength - 3))}...`;
+}
+
+function setCurrentHostLabel(value) {
+  elements.currentHost.textContent = truncateLabel(value);
+  elements.currentHost.title = value || "";
+}
+
 function formatTime(timestamp) {
   const date = new Date(timestamp);
   return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -82,21 +94,7 @@ async function notifyActiveTab(message = { type: "pwl-sync" }) {
     return;
   }
   chrome.tabs.sendMessage(tab.id, message, () => {
-    if (!chrome.runtime.lastError) {
-      return;
-    }
-    if (!chrome.scripting) {
-      return;
-    }
-    chrome.scripting.executeScript(
-      { target: { tabId: tab.id }, files: ["content_script.js"] },
-      () => {
-        void chrome.runtime.lastError;
-        chrome.tabs.sendMessage(tab.id, message, () => {
-          void chrome.runtime.lastError;
-        });
-      }
-    );
+    void chrome.runtime.lastError;
   });
 }
 
@@ -343,7 +341,7 @@ async function init() {
   const tab = await getActiveTab();
 
   if (!tab || !tab.url) {
-    elements.currentHost.textContent = "Unavailable";
+    setCurrentHostLabel("Unavailable");
     elements.lockStatus.textContent = "This page cannot be locked.";
     setDisabled(true);
     return;
@@ -353,21 +351,21 @@ async function init() {
   try {
     url = new URL(tab.url);
   } catch (error) {
-    elements.currentHost.textContent = "Unavailable";
+    setCurrentHostLabel("Unavailable");
     elements.lockStatus.textContent = "This page cannot be locked.";
     setDisabled(true);
     return;
   }
 
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    elements.currentHost.textContent = url.hostname || url.protocol;
+    setCurrentHostLabel(url.hostname || url.protocol);
     elements.lockStatus.textContent = "Only http/https pages can be locked.";
     setDisabled(true);
     return;
   }
 
   currentHost = url.hostname.toLowerCase();
-  elements.currentHost.textContent = currentHost;
+  setCurrentHostLabel(currentHost);
   elements.siteEntry.value = currentHost;
 
   await loadSiteStates();

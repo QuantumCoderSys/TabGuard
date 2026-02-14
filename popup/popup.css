@@ -83,6 +83,12 @@ header::after {
 
 .value {
   font-weight: 600;
+  max-width: 170px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
 }
 
 input {
